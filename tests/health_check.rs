@@ -134,6 +134,44 @@ async fn subscribe_returns_a_400_for_missing_form_data() {
     }
 }
 
+#[tokio::test]
+async fn subscribe_returns_a_400_when_fields_are_present_but_invalid() {
+    let app = spawn_app().await;
+    let client = reqwest::Client::new();
+
+    let test_cases = vec![
+        (
+            r#"{"name": "Tom {} esle", "email": "tom@malone"}"#,
+            "invalid chars { and } in name",
+        ),
+        (
+            r#"{"name": "   ", "email": "tom1@malone"}"#,
+            "just spaces in name",
+        ),
+        (
+            r#"{"name": "Tom esleasdlkfjasfjassdieo20349gfjlsjagoijaiojo0a909alskdjflasljaslöaslöfjasdlfjaslfdjalsdfjlöasdflasldflasdlfasdlfdlasdflasdlfasdflöasdlfölasjdflöasdlöfkalöskdflökasdflökalöskflökasdflköasdflökaslökfjlköasdflökjasldöfkjalöksdflökkasdflöjasölfdjasdölfjasölfkdjasölfdjasdölfjasöldfkjölasjdfölasdjfölkajsdfölaksjdfölaksjdfölaksjdfaölskdjfölaksdföalskdfölaksdjfaölskidjf", "email": "tom2@malone"}"#,
+            "name is too long",
+        ),
+    ];
+
+    for (invalid_body, error_message) in test_cases {
+        let response = client
+            .post(&format!("{}/subscriptions", &app.address))
+            .header("Conent-Type", "application/json")
+            .body(invalid_body)
+            .send()
+            .await
+            .expect("Failed to execute request...");
+
+        assert_eq!(
+            400,
+            response.status().as_u16(),
+            "The API did not fail with 400 Bad Request when the payload was {}",
+            error_message
+        );
+    }
+}
+
 async fn spawn_app() -> TestApp {
     // Ensure that the tracing stack is called only once...)
     Lazy::force(&TRACING);

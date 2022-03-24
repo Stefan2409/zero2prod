@@ -10,7 +10,7 @@ ENV SQLX_OFFLINE true
 # Builds our app
 RUN cargo build --release
 
-FROM alpine:latest AS runtime
+FROM alpine:3.15.1 AS runtime
 
 WORKDIR /app
 RUN apk --no-cache add ca-certificates
