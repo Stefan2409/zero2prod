@@ -1,4 +1,4 @@
-use actix_web::{http::header::HttpDate, web, HttpResponse};
+use actix_web::{web, HttpResponse};
 use chrono::Utc;
 use uuid::Uuid;
 
@@ -31,7 +31,7 @@ impl TryFrom<FormData> for NewSubscriber {
     )
 )]
 pub async fn subscribe(form: web::Json<FormData>, pool: web::Data<PgPool>) -> HttpResponse {
-    let new_subscriber = match parse_subscriber(form.0) {
+    let new_subscriber = match form.0.try_into() {
         Ok(subscriber) => subscriber,
         Err(_) => return HttpResponse::BadRequest().finish(),
     };
